@@ -1,30 +1,26 @@
-import express from "express"
-import dotenv from "dotenv"
-import userModel from "../../models/User.js"
-dotenv.config
+import express from "express";
+import userModel from "../models/User.js";
 
-const router = express.Router()
+const router = express.Router();
 
-router.post("/register", async (req,res) =>{
+router.get("/all-users", async (req, res) => {
     try {
-        let userDetails = req.body
-        let Database = await userModel.find()
-        let checkEXists = Database.find((item) => item.email == userDetails.email)
-        if(checkEXists){
-            return res.status(400).json({
-                msg: "user already exists"
-            })
-        }
-        userModel.create(userDetails)
-        res.status(201).json({
-            msg : "user created successfully"
-        })
+        let users = await userModel.find();
+        res.status(200).json(users);
     } catch (error) {
-        console.log(error);
-        res.status(500).json({
-            msg : "internal server error"
-        })
+        console.error(error.message);
+        res.status(500).json({Error: "Internal Server Error"});
     }
-})
+});
 
-export default router
+router.post("/register", async (req, res) => {
+    try {
+        let userDetails = req.body;
+
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({Error: "Internal Server Error"});
+    }
+});
+
+export default router;
