@@ -1,11 +1,10 @@
 import express from "express";
 import dotenv from "dotenv";
 dotenv.config();
+
 import "./utils/connectDB.js";
-import userRouter from "./controller/user/public.js";
+import userRouter from "./controllers/user/public.js";
 import userModel from "./models/User.js";
-
-
 const port = process.env.PORT;
 const app = express();
 
@@ -78,7 +77,7 @@ app.get("/find-one", async (req, res) => {
 //countDocuments
 app.get("/total-users", async (req,res) =>{
    try {
-     let allUsers = await userModel.countDocuments
+     let allUsers = await userModel.countDocuments()
     res.status(200).json({
         message : `total number of users are ${allUsers}`
     })
@@ -89,22 +88,37 @@ app.get("/total-users", async (req,res) =>{
     })    
    }
 })
+// findByIdAndUpdate() => (id, update, options)
+app.patch("/update-user/:id", async (req, res) => {
+    try {
+        let userID = req.params.id;
+        let changes = req.body;
 
-//find by id and update (string, object , options)
-app.patch("/update-user/:id", async (req,res) =>{
-   try {
-     let userID = req.params.id
-    let updateUser = await userModel.findByIdAndUpdate(userID, {$set : changes}, {new : true})
-    res.status(201).json({
-        "msg" : "user updated successfully"
-    })
-   } catch (error) {
-    console.log(error);
-    res.status(500).json({
-        "msg" : "internal server error"
-    })  
-   }
-})
+        let updateUser = await userModel.findByIdAndUpdate(
+            userID,
+            { $set: changes },
+            { new: true }
+        );
+
+        if (!updateUser) {
+            return res.status(404).json({
+                msg: "User not found"
+            });
+        }
+
+        res.status(200).json({
+            msg: "User updated successfully",
+            user: updateUser
+        });
+
+    } catch (error) {
+        console.log(error.message);
+
+        res.status(500).json({
+            msg: error.message
+        });
+    }
+});
 
 // find one and update ()
 app.patch("/update-user-findone/:email" , async (req,res) =>{
@@ -139,7 +153,7 @@ app.delete("/delete-id/:id", async (req,res) =>{
 })
 
 // find one and delete ()
-app.delete("/delete-one/:email", async (req,res) =>{
+app.delete("/delete-find-one/:email", async (req,res) =>{
     try {
         let userEmail = req.params.id
     let deleted = await userModel.findOneAndDelete({email : userEmail})
@@ -151,6 +165,106 @@ app.delete("/delete-one/:email", async (req,res) =>{
     res.status(500).json({
         "msg" : "internal server error"
     })    
+    }
+})
+
+// find one and replace 
+app.put("replace/:id", async (req,res) =>{
+   try {
+     let userID = req.params.id
+    let newUser = req.body
+    let ans = await userModel.findOneAndReplace({_id : userID}, newUser)
+    res.status(200).json({
+        "msg" : "user replaced successfully", ans
+    }) 
+   } catch (error) {
+     console.log(error);
+     res.status(500).json({
+        "msg" : "internal server error"
+     })
+   }
+})
+
+// replace one 
+app.put("/replace-one/:id", async (req,res) =>{
+    try {
+        let userID = req.params.id
+        let newUser = req.body
+        let ans = await userModel.replaceOne({_id : userID}, newUser)
+        res.status(200).json({
+            "msg" : "user replaced successfully", ans
+        })
+    } catch (error) {
+          console.log(error);
+     res.status(500).json({
+        "msg" : "internal server error"
+     })
+    }
+})
+
+// update one ()
+app.patch("/update-one/:id", async (req,res) =>{
+   try {
+     let userID = req.params.id
+    let newUser = req.body.id
+    let ans = await userModel.updateOne({_id : userID}, newUser)
+     res.status(200).json({
+            "msg" : "user updated successfully", ans
+        })
+   } catch (error) {
+    console.log(error);
+     res.status(500).json({
+        "msg" : "internal server error"
+     })
+   }
+})
+
+// update many 
+app.patch("/update-many/:id" , async (req,res) =>{
+   try {
+     let userID = req.params.id
+    let newUser = req.body.id
+    let ans = await userModel.updateMany({_id : userID}, newUser)
+     res.status(200).json({
+            "msg" : "user updated successfully", ans
+        })
+   } catch (error) {
+    console.log(error);
+     res.status(500).json({
+        "msg" : "internal server error"
+     })
+   }
+})
+
+// delete one ()
+app.delete("/delete-one/:id" , async (req,res) =>{
+    try {
+      let userID = req.params.id
+      let ans = await userModel.deleteOne(userID)
+      res.status(200).json({
+        "msg" : "user deleted successfully", ans
+      })  
+    } catch (error) {
+       console.log(error);
+     res.status(500).json({
+        "msg" : "internal server error"
+     })  
+    }
+})
+
+// delete many()
+app.delete("/delete-many/:name" , async (req,res) =>{
+    try {
+       let name = req.params.name
+       let ans = await userModel.deleteMany(name) 
+       res.status(200).json({
+        "msg" : "users deleted successdully", ans
+       })
+    } catch (error) {
+        console.log(error);
+     res.status(500).json({
+        "msg" : "internal server error"
+     })  
     }
 })
 
